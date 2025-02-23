@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.token.TokenMapper">
+    <select id="selectUserToken" parameterType="map" resultType="com.playnomm.wallet.dto.token.response.TokenInfoResponseDTO" >
+        SELECT A.USER_CXWALET_TKN_SN, A.SMRT_CNTRCT_ADRES, A.TKN_NM, A.CX_SYMBOL_CODE, A.DCMLPOINT_LT, A.EXPSR_ORDR,
+               IFNULL((SELECT CONCAT(#{imageDomain}, ATCH_FLPTH, FILE_NM) FROM PLAYCOMACDB.TCCO_FILE_DETAIL C WHERE C.FILE_ID = B.ICON_FILE_ID LIMIT 1), CONCAT(#{imageDomain},#{defaultIconImg})) AS ICON_FILE_URL
+        FROM TWAC_USER_CXWALET_TKN_INFO A LEFT JOIN PLAYCOMACDB.TCCO_BLC_TKN_BASS B ON A.BLC_TKN_SN = B.BLC_TKN_SN
+        WHERE USER_CXWALET_SN =(SELECT USER_CXWALET_SN FROM TWAC_USER_CXWALET_INFO WHERE user_sn=#{userSn} AND BLC_NTWRK_ID =#{blcNtwrkId} AND DELETE_AT ='N')
+          AND A.DELETE_AT ='N'
+    </select>
+
+    <select id="selectAllToken" parameterType="map" resultType="com.playnomm.wallet.dto.token.response.TokenAdditionResponseDTO" >
+        SELECT * FROM
+        (SELECT a.BLC_TKN_SN, b.USER_CXWALET_TKN_SN, b.PRVATE_TKN_AT,
+               CASE WHEN b.USER_CXWALET_TKN_SN IS NULL OR b.DELETE_AT ='Y' THEN 'N' ELSE 'Y' END OWN_AT,
+               a.SMRT_CNTRCT_ADRES, a.TKN_NM, a.CX_SYMBOL_CODE, a.DCMLPOINT_LT, a.EXPSR_ORDR, (SELECT CONCAT(#{imageDomain}, ATCH_FLPTH, FILE_NM) FROM PLAYCOMACDB.TCCO_FILE_DETAIL WHERE FILE_ID = a.ICON_FILE_ID LIMIT 1) AS ICON_FILE_URL,
+               CASE WHEN a.SMRT_CNTRCT_ADRES = #{lmContract} THEN 'Y' ELSE 'N' END DEFAULT_LM
+        FROM PLAYCOMACDB.TCCO_BLC_TKN_BASS a
+            LEFT JOIN (SELECT * FROM TWAC_USER_CXWALET_TKN_INFO WHERE USER_CXWALET_SN =(SELECT USER_CXWALET_SN FROM TWAC_USER_CXWALET_INFO WHERE USER_SN=#{userSn} AND BLC_NTWRK_ID =#{blcNtwrkId})) b
+                on a.BLC_TKN_SN = b.BLC_TKN_SN
+        WHERE a.DELETE_AT ='N' AND a.BLC_NTWRK_ID =#{blcNtwrkId} ORDER BY a.EXPSR_ORDR ASC) AS tmp1
+        UNION ALL
+        SELECT * FROM
+        (SELECT BLC_TKN_SN, USER_CXWALET_SN, PRVATE_TKN_AT, 'Y' AS OWN_AT, SMRT_CNTRCT_ADRES, TKN_NM, CX_SYMBOL_CODE, DCMLPOINT_LT, EXPSR_ORDR, CONCAT(#{imageDomain},#{defaultIconImg}) AS ICON_FILE_URL,
+                'N' AS DEFAULT_LM
+        FROM TWAC_USER_CXWALET_TKN_INFO
+        WHERE  USER_CXWALET_SN =(SELECT USER_CXWALET_SN FROM TWAC_USER_CXWALET_INFO WHERE USER_SN=#{userSn} AND BLC_NTWRK_ID =#{blcNtwrkId} AND DELETE_AT ='N')
+          AND PRVATE_TKN_AT='Y' AND DELETE_AT ='N' ORDER BY expsr_ordr ASC) tmp2
+    </select>
+
+    <update id="saveAdditionTokenList" parameterType="com.playnomm.wallet.dto.token.request.SaveAdditionRequestDTO">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            <if test="index == 0">
+                UPDATE TWAC_USER_CXWALET_TKN_INFO SET DELETE_AT ='Y'
+                WHERE USER_CXWALET_SN =(SELECT USER_CXWALET_SN FROM TWAC_USER_CXWALET_INFO WHERE USER_SN=#{item.userSn} AND BLC_NTWRK_ID= #{item.blcNtwrkId} AND DELETE_AT ='N');
+            </if>
+            <choose>
+                <when test="item.userCxwaletTknSn != null ">
+                    UPDATE TWAC_USER_CXWALET_TKN_INFO SET DELETE_AT ='N' WHERE USER_CXWALET_TKN_SN=#{item.userCxwaletTknSn}
+                </when>
+                <otherwise>
+                    INSERT INTO TWAC_USER_CXWALET_TKN_INFO
+                    (USER_CXWALET_SN, PRVATE_TKN_AT, SMRT_CNTRCT_ADRES, BLC_TKN_SN, BLC_NTWRK_ID, TKN_CHAIN_NM, CX_SYMBOL_CODE, TKN_NM, DCMLPOINT_LT, ICON_FILE_URL, EXPSR_ORDR, DELETE_AT)
+
+                    SELECT
+                    (SELECT USER_CXWALET_SN  FROM TWAC_USER_CXWALET_INFO WHERE USER_SN=#{item.userSn}
+                                                                           AND BLC_NTWRK_ID= #{item.blcNtwrkId}
+                                                                           AND DELETE_AT='N') AS USER_CXWALET_SN,
+                    'N',
+                    SMRT_CNTRCT_ADRES,
+                    BLC_TKN_SN,
+                    BLC_NTWRK_ID,
+                    TKN_CHAIN_NM,
+                    CX_SYMBOL_CODE,
+                    TKN_NM,
+                    DCMLPOINT_LT,
+                    (SELECT FILE_URL FROM PLAYCOMACDB.TCCO_FILE_DETAIL WHERE FILE_ID = ICON_FILE_ID) ICON_FILE_URL,
+                    CASE WHEN CX_SYMBOL_CODE = 'LM' THEN 1 ELSE 2 END EXPSR_ORDR,
+                    'N'
+                    FROM PLAYCOMACDB.TCCO_BLC_TKN_BASS
+                    WHERE BLC_TKN_SN=#{item.blcTknSn}
+                </otherwise>
+            </choose>
+        </foreach>
+    </update>
+
+    <update id="saveTokenOrder" parameterType="com.playnomm.wallet.dto.token.request.SaveOrderRequestDTO">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE TWAC_USER_CXWALET_TKN_INFO SET EXPSR_ORDR = #{item.expsrOrdr} WHERE USER_CXWALET_TKN_SN=#{item.userCxwaletTknSn}
+        </foreach>
+    </update>
+    <insert id="saveDirectToken" parameterType="com.playnomm.wallet.dto.token.request.SaveDirectTokenRequestDTO">
+        INSERT INTO TWAC_USER_CXWALET_TKN_INFO
+        (USER_CXWALET_SN, PRVATE_TKN_AT, SMRT_CNTRCT_ADRES, BLC_NTWRK_ID, CX_SYMBOL_CODE, TKN_NM, DCMLPOINT_LT, EXPSR_ORDR, DELETE_AT, BLC_TKN_SN)
+
+        SELECT USER_CXWALET_SN,
+               CASE WHEN (SELECT COUNT(*) FROM PLAYCOMACDB.TCCO_BLC_TKN_BASS where SMRT_CNTRCT_ADRES =#{smrtCntrctAdres}) = 0 THEN 'Y' ELSE 'N' END  PRVATE_TKN_AT,
+               #{smrtCntrctAdres}, #{blcNtwrkId}, #{cxSymbolCode}, #{tknNm}, 18, MAX(EXPSR_ORDR)+1, 'N',
+               (SELECT BLC_TKN_SN FROM PLAYCOMACDB.TCCO_BLC_TKN_BASS WHERE SMRT_CNTRCT_ADRES =#{smrtCntrctAdres}) AS BLC_TKN_SN
+        FROM TWAC_USER_CXWALET_INFO
+        WHERE USER_SN=#{userSn} AND BLC_NTWRK_ID =#{blcNtwrkId} AND DELETE_AT ='N'
+    </insert>
+    <select id="checkSmartContract" parameterType="com.playnomm.wallet.dto.token.request.SaveDirectTokenRequestDTO" resultType="int" >
+        SELECT COUNT(*) FROM TWAC_USER_CXWALET_TKN_INFO
+        WHERE USER_CXWALET_SN =(SELECT USER_CXWALET_SN FROM TWAC_USER_CXWALET_INFO WHERE USER_SN=#{userSn} AND BLC_NTWRK_ID =#{blcNtwrkId} AND DELETE_AT ='N')
+          AND SMRT_CNTRCT_ADRES =#{smrtCntrctAdres} AND DELETE_AT ='N'
+    </select>
+
+
+</mapper>

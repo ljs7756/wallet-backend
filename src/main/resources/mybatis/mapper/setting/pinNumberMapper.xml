@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.PinNumberMapper">
+    <select id="getPinNumberEnableState" parameterType="int" resultType="com.playnomm.wallet.dto.setting.response.PinNumberEnableStateResponseDTO" >
+        SELECT USER_TRADE_PIN_AT
+        FROM TWAC_USER_INFO
+        WHERE USER_SN=#{userSn}
+    </select>
+
+    <select id="findUserWithPinNumber" resultType="HashMap" parameterType="com.playnomm.wallet.dto.setting.request.PinNumberPatchRequestDTO">
+        SELECT USER_SN, USER_TRADE_PIN_AT
+        FROM TWAC_USER_INFO
+        WHERE USER_SN=#{userSn} and USER_TRADE_PIN=#{pinNumber}
+    </select>
+    <update id="postPinNumber" parameterType="com.playnomm.wallet.dto.setting.request.PinNumberPatchRequestDTO">
+        UPDATE TWAC_USER_INFO
+        SET USER_TRADE_PIN_AT = "Y", USER_TRADE_PIN = #{pinNumber}
+        WHERE USER_SN = #{userSn}
+    </update>
+    <update id="modifyPinNumber" parameterType="com.playnomm.wallet.dto.setting.request.PinNumberPatchRequestDTO" >
+        UPDATE TWAC_USER_INFO
+        SET USER_TRADE_PIN_AT = "Y", USER_TRADE_PIN = #{pinNumber}
+        WHERE USER_SN = #{userSn}
+    </update>
+
+
+</mapper>

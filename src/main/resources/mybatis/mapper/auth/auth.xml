@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.auth.AuthMapper">
+    <insert id="insertUser" parameterType="com.playnomm.wallet.dto.auth.request.InsertUserRequestDTO"  >
+        INSERT INTO TWAC_USER_INFO(USER_SN, USER_CMMN_SN,SYS_ID,USER_SBSCRB_DT,USER_STTUS_CODE)
+        SELECT * FROM (SELECT PLAYCOMACDB.SF_GET_SEQUENCE('SEQ_USER_SN') AS USER_SN, #{userCmmnSn} AS USER_CMMN_SN,'CXWL' AS SYS_ID, now() AS USER_SBSCRB_DT, 'P') AS tmp
+        WHERE NOT EXISTS (SELECT 1 FROM TWAC_USER_INFO b  WHERE tmp.USER_CMMN_SN= b.USER_CMMN_SN AND USER_STTUS_CODE='S')
+    </insert>
+
+    <insert id="insertUserWallet" parameterType="map"  >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            <choose>
+                <when test="item.blcNtwrkId == 1000">
+                    INSERT INTO TWAC_USER_CXWALET_INFO(USER_UUID, USER_SN, BLC_NTWRK_ID, BASS_ENTRY_NTWRK_AT, CXWALET_ADRES, USER_PRIVKY, USER_PBLKY)
+                    VALUES(#{item.cxwaletAdres},#{item.userSn},#{item.blcNtwrkId},#{item.bassEntryNtwrkAt}, #{item.cxwaletAdres}, #{item.userPrivky}, #{item.userPblky})
+                </when>
+                <otherwise>
+                    INSERT INTO TWAC_USER_CXWALET_INFO(USER_SN, BLC_NTWRK_ID, BASS_ENTRY_NTWRK_AT, CXWALET_ADRES, USER_PRIVKY, USER_PBLKY)
+                    VALUES(#{item.userSn},#{item.blcNtwrkId},#{item.bassEntryNtwrkAt}, #{item.cxwaletAdres}, #{item.userPrivky}, #{item.userPblky})
+                </otherwise>
+            </choose>
+        </foreach>
+    </insert>
+
+    <insert id="insertUserToken" parameterType="map">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            INSERT INTO TWAC_USER_CXWALET_TKN_INFO
+            (USER_CXWALET_SN, PRVATE_TKN_AT, SMRT_CNTRCT_ADRES, BLC_TKN_SN, BLC_NTWRK_ID, TKN_CHAIN_NM, CX_SYMBOL_CODE, TKN_NM, DCMLPOINT_LT, EXPSR_ORDR, DELETE_AT)
+            SELECT
+                (SELECT USER_CXWALET_SN  FROM TWAC_USER_CXWALET_INFO WHERE USER_SN=#{item.userSn} AND BLC_NTWRK_ID=#{item.blcNtwrkId} AND DELETE_AT='N') AS USER_CXWALET_SN,
+                'N',
+                SMRT_CNTRCT_ADRES,
+                BLC_TKN_SN,
+                BLC_NTWRK_ID,
+                TKN_CHAIN_NM,
+                CX_SYMBOL_CODE,
+                TKN_NM,
+                DCMLPOINT_LT,
+                CASE WHEN CX_SYMBOL_CODE = 'LM' THEN 1 ELSE 2 END EXPSR_ORDR,
+                'N'
+            FROM PLAYCOMACDB.TCCO_BLC_TKN_BASS
+            WHERE BLC_NTWRK_ID =#{item.blcNtwrkId} AND CX_SYMBOL_CODE=#{item.cxSymbolCode}
+        </foreach>
+    </insert>
+
+    <select id="selectInsertUser" parameterType="integer" resultType="com.playnomm.wallet.dto.auth.response.InsertUserResponseDTO" >
+        SELECT USER_SN, USER_SBSCRB_DT FROM TWAC_USER_INFO WHERE USER_CMMN_SN = #{userCmmnSn} and USER_STTUS_CODE ='P'
+    </select>
+
+    <update id="loginUser" parameterType="map">
+        UPDATE TWAC_USER_INFO SET LOGIN_REFRESH_TKN =#{refreshToken}, LOGIN_ACCES_TKN =#{accessToken}  WHERE USER_SN = #{userSn} and  (USER_STTUS_CODE ='S' or USER_STTUS_CODE ='P')
+    </update>
+
+    <update id="updateUserInfo" parameterType="map">
+        UPDATE TWAC_USER_INFO SET USER_NCNM = #{nickName} WHERE USER_SN = #{userSn}
+    </update>
+
+    <select id="getUserAccessToken" parameterType="integer" resultType="com.playnomm.wallet.dto.auth.response.UserAccessTokenResponseDTO" >
+        SELECT COUNT(*) AS CNT, LOGIN_ACCES_TKN, USER_CMMN_SN FROM TWAC_USER_INFO WHERE USER_SN=#{userSn} AND USER_STTUS_CODE ='S'
+    </select>
+    <update id="logout" parameterType="com.playnomm.wallet.dto.auth.request.LogOutRequestDTO">
+        UPDATE TWLG_LOGIN_TRACE_LOG SET LOGIN_STTUS_CODE ='SO', LOGOUT_DT = NOW()
+        WHERE  LOGIN_ACCES_TKN = #{loginAccesTkn}
+    </update>
+    <select id="getPreJoinUser" parameterType="com.playnomm.wallet.dto.auth.request.InsertUserRequestDTO" resultType="com.playnomm.wallet.dto.auth.response.UserAccessTokenResponseDTO" >
+        SELECT COUNT(*) AS CNT, USER_SN FROM TWAC_USER_INFO WHERE USER_CMMN_SN=#{userCmmnSn} AND USER_STTUS_CODE ='P'
+    </select>
+    <update id="updateJoinStatus" parameterType="com.playnomm.wallet.dto.auth.request.InsertUserRequestDTO">
+        UPDATE TWAC_USER_INFO SET USER_STTUS_CODE ='S' WHERE USER_CMMN_SN=#{userCmmnSn} AND USER_STTUS_CODE ='P'
+    </update>
+    <select id="getEtherAddressInfo" parameterType="integer" resultType="com.playnomm.wallet.dto.auth.response.EtherAddressInfoResponseDTO">
+        select
+            (select USER_UUID  from TWAC_USER_CXWALET_INFO c where a.USER_SN =c.USER_SN and c.BLC_NTWRK_ID='1000') AS USER_UUID,
+            b.CXWALET_ADRES, b.USER_PRIVKY, b.USER_PBLKY
+        from TWAC_USER_INFO a
+                 inner join TWAC_USER_CXWALET_INFO b on a.USER_SN =b.USER_SN
+        where a.USER_SN = #{userSn}
+          and b.BLC_NTWRK_ID ='1001'
+    </select>
+    <insert id="insertLoginLog" parameterType="map">
+        INSERT INTO TWLG_LOGIN_TRACE_LOG(SYS_ID, USER_SN, LOGIN_STTUS_CODE, LOGIN_ACCES_TKN, LOGIN_REFRESH_TKN, LOGIN_DT, LOGIN_END_DT, LOGIN_UUID)
+        VALUES('CXWL',#{userSn}, #{loginSttusCode}, #{accessToken}, #{refreshToken}, #{loginDt}, #{loginEndDt}, #{loginUuid})
+    </insert>
+    <select id="checkDuplicate" parameterType="map" resultType="int">
+        SELECT COUNT(*) AS CNT FROM
+            (SELECT * FROM TWLG_LOGIN_TRACE_LOG WHERE USER_SN =#{userSn} ORDER BY LOGIN_SN DESC LIMIT 1) AS a
+        WHERE (a.login_sttus_code='S' OR a.login_sttus_code='RF') AND login_end_dt > now() AND (LOGIN_UUID IS NULL OR LOGIN_UUID != #{loginUuid})
+    </select>
+    <select id="checkLogOut" parameterType="string" resultType="int">
+        SELECT COUNT(*) AS CNT FROM TWLG_LOGIN_TRACE_LOG WHERE LOGIN_STTUS_CODE ='SO' AND
+                LOGIN_ACCES_TKN =#{loginAccesTkn}
+    </select>
+    <select id="getPrivateKey1" parameterType="map" resultType="string">
+        SELECT USER_PRIVKY FROM TWAC_USER_CXWALET_INFO WHERE USER_SN =#{userSn} AND CXWALET_ADRES =#{smrtCntrctAdres}  AND BLC_NTWRK_ID =#{blcNtwrkId}
+    </select>
+    <select id="migrationPrivateKey" resultType="map">
+        /*select USER_SN, BLC_NTWRK_ID , CXWALET_ADRES, USER_PRIVKY from TWAC_USER_CXWALET_INFO where BLC_NTWRK_ID in('1001','1002') and user_sn is not null and  USER_PRIVKY is not null*/
+         select USER_SN, BLC_NTWRK_ID , CXWALET_ADRES, USER_PRIVKY  from TWAC_USER_CXWALET_INFO where BLC_NTWRK_ID in('1001','1002') and user_sn=20222167
+    </select>
+    <update id="updateMigrationPrivateKey" parameterType="map">
+        update TWAC_USER_CXWALET_INFO set USER_PRIVKY=#{userPrivky} where USER_SN =#{userSn} AND CXWALET_ADRES =#{cxwaletAdres} AND BLC_NTWRK_ID =#{blcNtwrkId}
+    </update>
+    <select id="getMngrPrivateKey1" parameterType="map" resultType="map">
+        SELECT BLC_MNGR_BASS_SN, BLC_MNGR_PRIVKY FROM PLAYCOMACDB.TCCO_BLC_MNGR_BASS WHERE BLC_MNGR_ID = #{blcMngrId}
+    </select>
+
+</mapper>

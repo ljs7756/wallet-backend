@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.ConfigurationMapper">
+
+    <select id="getConfiguration" parameterType="int" resultType="com.playnomm.wallet.dto.setting.response.ConfigurationDTO">
+        SELECT CRRNCY_SYMBOL_CODE, LANG_CODE, LOGIN_SAUTH_USE_AT
+            FROM TWAC_USER_INFO
+            WHERE USER_SN = #{userSn}
+    </select>
+    <update id="patchSymbol" parameterType="com.playnomm.wallet.dto.setting.request.ChangeSymbolDTO">
+        UPDATE TWAC_USER_INFO
+        SET CRRNCY_SYMBOL_CODE = #{symbolCode}
+        WHERE USER_SN = #{userSn}
+    </update>
+    <update id="patchLanguage" parameterType="com.playnomm.wallet.dto.setting.request.ChangeLanguageDTO">
+        UPDATE TWAC_USER_INFO
+        SET LANG_CODE = #{langCode}
+        WHERE USER_SN = #{userSn}
+    </update>
+    <update id="patchSAuth" parameterType="com.playnomm.wallet.dto.setting.request.ChangeSAuthDTO">
+        UPDATE TWAC_USER_INFO
+        SET LOGIN_SAUTH_USE_AT = #{loginSauthUseAt}
+        WHERE USER_SN = #{userSn}
+    </update>
+
+</mapper>

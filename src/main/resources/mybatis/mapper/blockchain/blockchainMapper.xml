@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.blockchain.BlockchainMapper">
+    <select id="selectUserCxwaletInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            TUCI.*
+        FROM TWAC_USER_INFO TUI
+        JOIN TWAC_USER_CXWALET_INFO TUCI ON TUI.USER_SN = TUCI.USER_SN AND TUI.USER_STTUS_CODE = 'S'
+        WHERE TUI.USER_CMMN_SN = #{USER_CMMN_SN} AND TUI.SYS_ID = #{SYS_ID} AND TUCI.BLC_NTWRK_ID = #{BLC_NTWRK_ID}
+    </select>
+
+    <select id="selectUserCxwaletTknInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            TUCI.*
+            , TUCTI.*
+            , IFNULL(TBTB.BLC_NTWRK_BASS_TKN_AT, 'N') AS BLC_NTWRK_BASS_TKN_AT
+        FROM TWAC_USER_CXWALET_TKN_INFO TUCTI
+        JOIN TWAC_USER_CXWALET_INFO TUCI ON TUCI.USER_CXWALET_SN = TUCTI.USER_CXWALET_SN
+        JOIN TWAC_USER_INFO TUI ON TUCI.USER_SN = TUI.USER_SN AND TUI.USER_STTUS_CODE = 'S'
+        LEFT JOIN PLAYCOMACDB.TCCO_BLC_TKN_BASS TBTB ON TBTB.BLC_TKN_SN = TUCTI.BLC_TKN_SN
+        WHERE 1 = 1
+        <if test='USER_CXWALET_TKN_SN != null'>
+            AND TUCTI.USER_CXWALET_TKN_SN = #{USER_CXWALET_TKN_SN}
+        </if>
+        <if test='BLC_NTWRK_ID != null and !BLC_NTWRK_ID.equals ("")'>
+            AND TUCTI.BLC_NTWRK_ID = #{BLC_NTWRK_ID}
+        </if>
+        <if test='USER_CXWALET_SN != null'>
+            AND TUCI.USER_CXWALET_SN = #{USER_CXWALET_SN}
+        </if>
+        <if test='CX_SYMBOL_CODE != null and !CX_SYMBOL_CODE.equals ("")'>
+            AND TUCTI.CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+        </if>
+    </select>
+
+    <insert id="insertTxHashLog" parameterType="HashMap" useGeneratedKeys="true" keyProperty="TXHASH_SN">
+        INSERT INTO PLAYCXTRDDB.TCLG_TXHASH_LOG (
+            PREV_LMC_TXHASH_SN
+            , TX_KND_NM
+            , TX_NM
+            , USER_CXWALET_TKN_SN
+            , BLC_TKN_SN
+            , BLC_NTWRK_ID
+            , CX_SYMBOL_CODE
+            , CREAT_DT
+            , ACNT_ID
+            , GUARDIAN_ACNT_ID
+            , TXHASH_ID
+            , SIGN_TXHASH
+            , REQUST_URL
+            , REQUST_HTTP_METHOD
+            , REQUST_PARAMTR
+            , HTTP_RESULT_CODE
+            , RSPNS_RESULT
+            , RETRY_CO
+            , SYS_REGIST_DT
+            , SYS_REGISTER_SN
+            , SYS_UPDT_DT
+            , SYS_UPDUSR_SN
+        ) VALUES (
+            #{PREV_LMC_TXHASH_SN}
+            , #{TX_KND_NM}
+            , #{TX_NM}
+            , #{USER_CXWALET_TKN_SN}
+            , #{BLC_TKN_SN}
+            , #{BLC_NTWRK_ID}
+            , #{CX_SYMBOL_CODE}
+            , #{CREAT_DT}
+            , #{ACNT_ID}
+            , #{GUARDIAN_ACNT_ID}
+            , #{TXHASH_ID}
+            , #{SIGN_TXHASH}
+            , #{REQUST_URL}
+            , #{REQUST_HTTP_METHOD}
+            , #{REQUST_PARAMTR}
+            , #{HTTP_RESULT_CODE}
+            , #{RSPNS_RESULT}
+            , #{RETRY_CO}
+            , NOW()
+            , #{SYS_REGISTER_SN}
+            , #{SYS_UPDT_DT}
+            , #{SYS_UPDUSR_SN}
+        )
+    </insert>
+
+    <insert id="insertTradeInfoLog" parameterType="HashMap" useGeneratedKeys="true" keyProperty="CX_TRADE_SN">
+        INSERT INTO PLAYCXTRDDB.TCCX_TRADE_INFO (
+            SYS_ID
+            , BLC_TKN_SN
+            , BLC_NTWRK_ID
+            , CX_SYMBOL_CODE
+            , PREV_CX_TRADE_SN
+            , CX_TRADE_NO
+            , COLCT_MNTNG_PARTCPN_SN
+            , COLCT_MNTNG_PRZWIN_SN
+            , MRKT_PRDCT_SN
+            , MRKT_PRDCT_CNCLS_SN
+            , RANDBOX_OPN_AT
+            , NFT_RANDBOX_SN
+            , RANDBOX_SN
+            , NFTITM_SN
+            , NFTITM_RARE_CODE
+            , NFTITM_RARE_WGHTVAL
+            , RWARD_ODR_SN
+            , BLC_ACNT_TY_CODE
+            , USER_CMMN_SN
+            , USER_SN
+            , BLC_MNGR_ACNT_SN
+            , TRADE_TY_CODE
+            , TRADE_TY_DETAIL_CODE
+            , TRADE_OCCRRNC_DT
+            , CX_TKN_DFN_SN
+            , CX_TRADE_QTY
+            , CX_FEE_QTY
+            , CX_BNUS_QTY
+            , BLC_PROCESS_STTUS_CODE
+            , TXHASH_SN
+            , BLC_TRNSMIS_DT
+            , BLC_RSPNS_DT
+            , SIGN_TXHASH
+            , BLC_TRNSMIS_RESULT_CODE
+            , TRADE_CNTRCT_ADRES
+            , TRSMTR_BLC_NTWRK_ID
+            , TRSMTR_CX_SYMBOL_CODE
+            , TRSMTR_BLC_ACNT_TY_CODE
+            , TRSMTR_USER_CMMN_SN
+            , TRSMTR_USER_SN
+            , TRSMTR_BLC_MNGR_ACNT_SN
+            , TRSMTR_CXWALET_ADRES
+            , RCVER_BLC_NTWRK_ID
+            , RCVER_CX_SYMBOL_CODE
+            , RCVER_BLC_ACNT_TY_CODE
+            , RCVER_USER_CMMN_SN
+            , RCVER_USER_SN
+            , RCVER_BLC_MNGR_ACNT_SN
+            , RCVER_CXWALET_ADRES
+            , CX_RWARD_PYMNT_AT
+            , CX_RWARD_TXHASH_SN
+            , CX_RWARD_PYMNT_DT
+            , CX_RWARD_PYMNT_RESULT_CODE
+            , CX_TRADE_MEMO
+            , SYS_REGIST_DT
+            , SYS_REGISTER_SN
+            , SYS_UPDT_DT
+            , SYS_UPDUSR_SN
+            , CX_BLCE_QTY
+            , NFT_TKN_ID
+        ) VALUES (
+            #{SYS_ID}
+            , #{BLC_TKN_SN}
+            , #{BLC_NTWRK_ID}
+            , #{CX_SYMBOL_CODE}
+            , #{PREV_CX_TRADE_SN}
+            , #{CX_TRADE_NO}
+            , #{COLCT_MNTNG_PARTCPN_SN}
+            , #{COLCT_MNTNG_PRZWIN_SN}
+            , #{MRKT_PRDCT_SN}
+            , #{MRKT_PRDCT_CNCLS_SN}
+            , #{RANDBOX_OPN_AT}
+            , #{NFT_RANDBOX_SN}
+            , #{RANDBOX_SN}
+            , #{NFTITM_SN}
+            , #{NFTITM_RARE_CODE}
+            , #{NFTITM_RARE_WGHTVAL}
+            , #{RWARD_ODR_SN}
+            , #{BLC_ACNT_TY_CODE}
+            , #{USER_CMMN_SN}
+            , #{USER_SN}
+            , #{BLC_MNGR_ACNT_SN}
+            , #{TRADE_TY_CODE}
+            , #{TRADE_TY_DETAIL_CODE}
+            , #{TRADE_OCCRRNC_DT}
+            , #{CX_TKN_DFN_SN}
+            , #{CX_TRADE_QTY}
+            , #{CX_FEE_QTY}
+            , #{CX_BNUS_QTY}
+            , #{BLC_PROCESS_STTUS_CODE}
+            , #{TXHASH_SN}
+            , #{BLC_TRNSMIS_DT}
+            , #{BLC_RSPNS_DT}
+            , #{SIGN_TXHASH}
+            , #{BLC_TRNSMIS_RESULT_CODE}
+            , #{TRADE_CNTRCT_ADRES}
+            , #{TRSMTR_BLC_NTWRK_ID}
+            , #{TRSMTR_CX_SYMBOL_CODE}
+            , #{TRSMTR_BLC_ACNT_TY_CODE}
+            , #{TRSMTR_USER_CMMN_SN}
+            , #{TRSMTR_USER_SN}
+            , #{TRSMTR_BLC_MNGR_ACNT_SN}
+            , #{TRSMTR_CXWALET_ADRES}
+            , #{RCVER_BLC_NTWRK_ID}
+            , #{RCVER_CX_SYMBOL_CODE}
+            , #{RCVER_BLC_ACNT_TY_CODE}
+            , #{RCVER_USER_CMMN_SN}
+            , #{RCVER_USER_SN}
+            , #{RCVER_BLC_MNGR_ACNT_SN}
+            , #{RCVER_CXWALET_ADRES}
+            , #{CX_RWARD_PYMNT_AT}
+            , #{CX_RWARD_TXHASH_SN}
+            , #{CX_RWARD_PYMNT_DT}
+            , #{CX_RWARD_PYMNT_RESULT_CODE}
+            , #{CX_TRADE_MEMO}
+            , NOW()
+            , #{SYS_REGISTER_SN}
+            , #{SYS_UPDT_DT}
+            , #{SYS_UPDUSR_SN}
+            , #{CX_BLCE_QTY}
+            , #{NFT_TKN_ID}
+        )
+    </insert>
+
+    <!-- 이번 주 보상 차수 조회 -->
+    <select id="selectThisWeekRwardOdrInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCXTRDDB.TCCO_RWARD_ODR_INFO
+        WHERE NOW() BETWEEN RWARD_STDR_BEGIN_DT AND RWARD_STDR_END_DT
+    </select>
+
+    <select id="selectTccoTknDefInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_TKN_DEF_INFO
+        WHERE 1 = 1
+        <if test='BLC_NTWRK_ID != null and !BLC_NTWRK_ID.equals ("")'>
+            AND BLC_NTWRK_ID = #{BLC_NTWRK_ID}
+        </if>
+        <if test='CX_SYMBOL_CODE != null and !CX_SYMBOL_CODE.equals ("")'>
+            AND CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+        </if>
+        <if test='TKN_DFN_SN != null'>
+            AND TKN_DFN_SN = #{TKN_DFN_SN}
+        </if>
+    </select>
+
+    <select id="selectTccoBlcTknBass" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_BLC_TKN_BASS
+        WHERE BLC_NTWRK_ID = #{BLC_NTWRK_ID}
+        <if test='CX_SYMBOL_CODE != null and !CX_SYMBOL_CODE.equals ("")'>
+            AND CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+        </if>
+        <if test='CX_SYMBOL_CODE == null'>
+            AND BLC_NTWRK_BASS_TKN_AT = 'Y'
+        </if>
+    </select>
+
+    <select id="selectTccoTknFtInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_TKN_FT_INFO
+        WHERE BLC_NTWRK_ID = #{BLC_NTWRK_ID} AND CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+    </select>
+
+    <select id="selectTccoTknNftInfo" parameterType="java.lang.Integer" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_TKN_NFT_INFO
+        WHERE TKN_NFT_SN = #{TKN_NFT_SN}
+    </select>
+
+    <select id="selectTncnNftitmInfo" parameterType="HashMap" resultType="LmcNftDTO">
+        SELECT
+            TNI.NFTITM_SN
+            , CONCAT(TCI.COLCT_NM, TNI.NFTITM_NM) AS NFTITM_NM
+            , TNI.NFTITM_RARE_CODE
+            , PLAYCOMACDB.SF_GET_STD_CODE_NM('NFTITM_RARE_CODE', TNI.NFTITM_RARE_CODE, #{LANG_CODE}) AS NFTITM_RARE_CODE_NM
+            , TNI.NFTITM_RARE_WGHTVAL
+            , TCI.CRTR_NM
+            , TNI.NFT_STTUS_CODE
+            , PLAYCOMACDB.SF_GET_STD_CODE_NM('NFT_STTUS_CODE', TNI.NFT_STTUS_CODE, #{LANG_CODE}) AS NFT_STTUS_CODE_NM
+            , TNI.OWNER_USER_SN
+            , TNI.NFTITM_MEDIA_TY_CODE
+            , PLAYCOMACDB.SF_GET_STD_CODE_NM('NFTITM_MEDIA_TY_CODE', TNI.NFTITM_MEDIA_TY_CODE, #{LANG_CODE}) AS NFTITM_MEDIA_TY_CODE_NM
+            , TNI.NFTITM_CNTNTS_URL
+            , TNI.NFTITM_META_FILE_URL
+            , TNI.NFTITM_REGIST_DT
+            , TNI.NFTITM_QTY
+            , TNI.NFTITM_QTY * (SELECT CX_EXR_USD_CRRNCY_AMT FROM PLAYCOMACDB.TCCO_EXR_BASS WHERE CX_SYMBOL_CODE = 'LM' AND LAST_AT = 'Y') AS NFTITM_QTY_USD
+            , TNI.NFTITM_QTY * (SELECT CX_EXR_KRW_CRRNCY_AMT FROM PLAYCOMACDB.TCCO_EXR_BASS WHERE CX_SYMBOL_CODE = 'LM' AND LAST_AT = 'Y') AS NFTITM_QTY_KRW
+            , TCSI.SEASON_TME_NM
+            , TCSI.SEASON_NM
+            , (CASE
+                WHEN #{LANG_CODE} = 'KO' THEN TCSI.SEASON_DC_KO
+                WHEN #{LANG_CODE} = 'EN' THEN TCSI.SEASON_DC
+                ELSE TCSI.SEASON_DC_KO
+            END) AS SEASON_DC
+            , (CASE
+                WHEN #{LANG_CODE} = 'KO' THEN TCI.COLCT_DC_KO
+                WHEN #{LANG_CODE} = 'EN' THEN TCI.COLCT_DC
+                ELSE TCI.COLCT_DC_KO
+            END) AS COLCT_DC
+            , TTI.TRADE_OCCRRNC_DT
+            , TTI.TRSMTR_CXWALET_ADRES
+            , TTI.SIGN_TXHASH
+            , TNI.RANDBOX_OPN_AT
+            , TNI.RANDBOX_SN
+            , TNI.TKN_NFT_SN
+            , TTDI.TKN_DFN_ID
+            , TTNI.TKN_ID
+            , TTI.CX_TRADE_SN
+            , TNI.SIGN_TXHASH AS NFT_SIGN_TXHASH
+        FROM PLAY_NOMMDB.TNCN_NFTITM_INFO TNI
+        JOIN PLAY_NOMMDB.TNCN_COLCT_INFO TCI ON TNI.COLCT_SN = TCI.COLCT_SN
+        JOIN PLAY_NOMMDB.TNCN_COLCT_SEASON_INFO TCSI ON TCSI.COLCT_SEASON_SN = TCI.COLCT_SEASON_SN
+        JOIN PLAYCOMACDB.TCCO_TKN_NFT_INFO TTNI ON TNI.TKN_NFT_SN = TTNI.TKN_NFT_SN
+        JOIN PLAYCOMACDB.TCCO_TKN_DEF_INFO TTDI ON TTDI.TKN_DFN_SN = TTNI.TKN_DFN_SN
+        LEFT JOIN (
+            SELECT
+                CX_TRADE_SN
+                , NFTITM_SN
+                , TRADE_OCCRRNC_DT
+                , TRSMTR_CXWALET_ADRES
+                , SIGN_TXHASH
+            FROM PLAYCXTRDDB.TCCX_TRADE_INFO
+            WHERE NFTITM_SN = #{NFTITM_SN} AND USER_CMMN_SN = #{USER_CMMN_SN} ORDER BY CX_TRADE_SN DESC LIMIT 1
+        ) TTI ON TTI.NFTITM_SN = TNI.NFTITM_SN
+        WHERE TNI.DELETE_AT = 'N' AND TNI.NFTITM_SN = #{NFTITM_SN}
+    </select>
+
+    <select id="selectTncnNftitmList" parameterType="HashMap" resultType="LmcNftsDTO">
+<!--        SELECT-->
+<!--            TNI.NFTITM_SN-->
+<!--            , CONCAT(TCI.COLCT_NM, TNI.NFTITM_NM) AS NFTITM_NM-->
+<!--            , PLAYCOMACDB.SF_GET_FILE_PATH(TNI.NFTITM_CNTNTS_THUMB_FILE_ID) AS NFTITM_CNTNTS_THUMB_FILE_PATH-->
+<!--            , TCI.CRTR_NM-->
+<!--            , TUNRD.USER_NFT_RANDBOX_SN-->
+<!--            , TNI.RANDBOX_SN-->
+<!--            , IFNULL(TUNRD.EXPSR_ORDR, 0) AS EXPSR_ORDR-->
+<!--        FROM PLAY_NOMMDB.TNCN_NFTITM_INFO TNI-->
+<!--        JOIN PLAY_NOMMDB.TNCN_COLCT_INFO TCI ON TNI.COLCT_SN = TCI.COLCT_SN-->
+<!--        JOIN PLAYCOMACDB.TCCO_TKN_NFT_INFO TTNI ON TNI.TKN_NFT_SN = TTNI.TKN_NFT_SN-->
+<!--        LEFT JOIN TWAC_USER_NFT_RANDBOX_DETAIL TUNRD ON TUNRD.NFTITM_SN = TNI.NFTITM_SN-->
+<!--        WHERE TNI.OWNER_USER_SN = #{OWNER_USER_SN}-->
+<!--        <if test="tokenIdList != null">-->
+<!--            AND TTNI.TKN_ID IN-->
+<!--            <foreach collection="tokenIdList" item="tokenId" open="(" close=")" separator=",">-->
+<!--                #{tokenId}-->
+<!--            </foreach>-->
+<!--        </if>-->
+        SELECT
+            VML.NFTITM_SN
+            , CONCAT(VML.COLCT_NM, VML.NFTITM_NM) AS NFTITM_NM
+            , VML.NFTITM_CNTNTS_THUMB_FILE_PATH
+            , VML.CRTR_NM
+            , TUNRD.USER_NFT_RANDBOX_SN
+            , TUNRD.RANDBOX_SN
+            , IFNULL(TUNRD.EXPSR_ORDR, 0) AS EXPSR_ORDR
+        FROM PLAY_NOMMDB.VNCO_07MY_05_MYCOLLECTION_LST VML
+        LEFT JOIN TWAC_USER_NFT_RANDBOX_DETAIL TUNRD ON TUNRD.NFTITM_SN = VML.NFTITM_SN
+        WHERE VML.USER_CMMN_SN = #{USER_CMMN_SN} AND VML.RANDBOX_OPN_AT = 'Y'
+    </select>
+
+    <update id="updateTncnNftitmInfo" parameterType="HashMap">
+        UPDATE PLAY_NOMMDB.TNCN_NFTITM_INFO SET
+            SYS_UPDT_DT = NOW()
+            , OWNER_USER_SN = #{OWNER_USER_SN}
+            <if test="USER_SN != null">
+                , SYS_UPDUSR_SN = #{USER_SN}
+            </if>
+            <if test="TXHASH_SN != null">
+                , TXHASH_SN = #{TXHASH_SN}
+            </if>
+            <if test="SIGN_TXHASH != null">
+                , SIGN_TXHASH = #{SIGN_TXHASH}
+            </if>
+        WHERE NFTITM_SN = #{NFTITM_SN}
+    </update>
+
+    <select id="selectUserCxwaletTknInfoList" parameterType="java.lang.Integer" resultType="HashMap">
+        SELECT
+            TUCTI.*
+        FROM TWAC_USER_INFO TUI
+        JOIN PLAYCOMACDB.TCAC_USER_CMMN_INFO PTUCI ON PTUCI.USER_CMMN_SN = TUI.USER_CMMN_SN
+        JOIN TWAC_USER_CXWALET_INFO TUCI ON TUI.USER_SN = TUCI.USER_SN
+        JOIN TWAC_USER_CXWALET_TKN_INFO TUCTI ON TUCTI.USER_CXWALET_SN = TUCI.USER_CXWALET_SN
+        JOIN PLAYCOMACDB.TCCO_BLC_TKN_BASS TBTB ON TBTB.BLC_TKN_SN = TUCTI.BLC_TKN_SN
+        WHERE PTUCI.USER_CMMN_SN = #{userCmmnSn}
+    </select>
+
+    <select id="selectBlcNtwrkGasInfo" parameterType="String" resultType="GasTrackerDTO">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_BLC_NTWRK_GAS_INFO
+        WHERE BLC_NTWRK_ID = #{BLC_NTWRK_ID}
+    </select>
+
+    <select id="selectErcNftTradeInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            CX_TRADE_SN
+            , TRADE_OCCRRNC_DT
+            , TRSMTR_CXWALET_ADRES
+            , SIGN_TXHASH
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO
+        WHERE NFT_TKN_ID = #{NFT_TKN_ID} AND USER_CMMN_SN = #{USER_CMMN_SN}
+        ORDER BY CX_TRADE_SN DESC LIMIT 1
+    </select>
+</mapper>

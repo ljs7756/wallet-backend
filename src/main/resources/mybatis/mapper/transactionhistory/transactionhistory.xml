@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.transactionhistory.TransactionHistoryMapper">
+    <select id="selectTokenTransactionHistory" parameterType="map" resultType="com.playnomm.wallet.dto.transaction.response.TransactionHistoryResponseDTO" >
+        select  CX_TRADE_SN,SYS_ID, BLC_NTWRK_ID, CX_SYMBOL_CODE, TRADE_TY_CODE,TRADE_TY_DETAIL_CODE,
+                USER_SN, TRSMTR_USER_SN, TRSMTR_CXWALET_ADRES, RCVER_USER_SN, RCVER_CXWALET_ADRES,
+                CX_TRADE_QTY, CX_FEE_QTY, CX_BLCE_QTY, TRADE_OCCRRNC_DT,
+                CASE WHEN TRADE_TY_CODE='T'  AND (SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'LL' OR SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'EE' OR SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'BB') THEN 'transfer'
+                     WHEN TRADE_TY_CODE='T'  AND (SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'LE' OR SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'EL') THEN 'swap'
+                     WHEN TRADE_TY_CODE='R' THEN 'reward'
+                     ELSE '' END TRANSACTION_TYPE,
+                CASE WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'F' THEN 'sent'
+                     WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'T' THEN 'received'
+                     WHEN TRADE_TY_CODE='R' THEN 'received'
+                     ELSE '' END TRANSACTION_DETAIL,
+                (SELECT SIGN_TXHASH FROM  PLAYCXTRDDB.TCLG_TXHASH_LOG WHERE TXHASH_SN = a.TXHASH_SN) AS TXHASH,
+                BLC_PROCESS_STTUS_CODE, BLC_TRNSMIS_RESULT_CODE
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO a
+        WHERE USER_CMMN_SN =(SELECT USER_CMMN_SN FROM TWAC_USER_INFO WHERE USER_SN= #{userSn}) AND BLC_NTWRK_ID=#{blcNtwrkId} AND TRADE_TY_DETAIL_CODE IN <foreach item="item" collection="tradeTyDetailCode" open="(" separator="," close=")">#{item}</foreach>
+            AND TRADE_CNTRCT_ADRES = (select SMRT_CNTRCT_ADRES from TWAC_USER_CXWALET_TKN_INFO where USER_CXWALET_TKN_SN =#{userCxwaletTknSn})
+            AND  date_format(TRADE_OCCRRNC_DT, '%Y%m%d') BETWEEN #{startDt} AND #{endDt}
+    </select>
+
+    <select id="selectTokenTransactionHistoryDetail" parameterType="map" resultType="com.playnomm.wallet.dto.transaction.response.TransactionHistoryResponseDTO" >
+        select  CX_TRADE_SN,SYS_ID, BLC_NTWRK_ID, CX_SYMBOL_CODE, TRADE_TY_CODE,TRADE_TY_DETAIL_CODE,
+        USER_SN, TRSMTR_USER_SN, TRSMTR_CXWALET_ADRES, RCVER_USER_SN, RCVER_CXWALET_ADRES,
+        CX_TRADE_QTY, CX_FEE_QTY, CX_BLCE_QTY, TRADE_OCCRRNC_DT,
+        CASE WHEN TRADE_TY_CODE='T'  AND (SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'LL' OR SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'EE' OR SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'BB') THEN 'transfer'
+             WHEN TRADE_TY_CODE='T'  AND (SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'LE' OR SUBSTR(TRADE_TY_DETAIL_CODE, 2,2) = 'EL') THEN 'swap'
+             WHEN TRADE_TY_CODE='R' THEN 'reward'
+             ELSE '' END TRANSACTION_TYPE,
+        CASE WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'F' THEN 'sent'
+             WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'T' THEN 'received'
+             WHEN TRADE_TY_CODE='R' THEN 'received'
+             ELSE '' END TRANSACTION_DETAIL,
+        (SELECT SIGN_TXHASH FROM  PLAYCXTRDDB.TCLG_TXHASH_LOG WHERE TXHASH_SN = a.TXHASH_SN) AS TXHASH,
+        BLC_PROCESS_STTUS_CODE, BLC_TRNSMIS_RESULT_CODE
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO a
+        WHERE a.CX_TRADE_SN =#{cxTradeSn}
+    </select>
+
+    <select id="selectNftTransactionHistory" parameterType="map" resultType="com.playnomm.wallet.dto.transaction.response.NftTransactionHistoryResponseDTO" >
+        SELECT a.NFTITM_SN,
+        (SELECT SEASON_NM FROM PLAY_NOMMDB.TNCN_COLCT_SEASON_INFO e WHERE e.COLCT_SEASON_SN = c.COLCT_SEASON_SN) AS SEASON_NM,
+        b.COLCT_SN, c.COLCT_NM, b.NFTITM_NM,
+        (SELECT FILE_URL FROM PLAYCOMACDB.TCCO_FILE_DETAIL d WHERE d.FILE_ID = b.NFTITM_CNTNTS_THUMB_FILE_ID) AS NFTITM_CNTNTS_THUMB_FILE_ID,
+        b.NFTITM_CNTNTS_URL,
+        a.CX_TRADE_SN, a.SYS_ID, a.BLC_NTWRK_ID, a.CX_SYMBOL_CODE, a.TRADE_TY_CODE,a.TRADE_TY_DETAIL_CODE,
+        a.USER_SN, a.TRSMTR_USER_SN, a.TRSMTR_CXWALET_ADRES, a.RCVER_USER_SN, a.RCVER_CXWALET_ADRES,
+        a.CX_TRADE_QTY, a.CX_FEE_QTY, a.TRADE_OCCRRNC_DT,
+        CASE WHEN TRADE_TY_CODE='P'  THEN 'trade'
+             WHEN TRADE_TY_CODE='T'  THEN 'transfer'
+             WHEN TRADE_TY_CODE='M' THEN 'minting'
+             ELSE '' END TRANSACTION_TYPE,
+        CASE WHEN TRADE_TY_CODE='M' AND TRADE_TY_DETAIL_CODE = 'M02' THEN 'sent'
+             WHEN TRADE_TY_CODE='M' AND TRADE_TY_DETAIL_CODE = 'M01' THEN 'received'
+             WHEN TRADE_TY_CODE='P' AND (TRADE_TY_DETAIL_CODE = 'PP12' OR TRADE_TY_DETAIL_CODE = 'PP22') THEN 'received'
+             WHEN TRADE_TY_CODE='P' AND (TRADE_TY_DETAIL_CODE = 'PP13' OR TRADE_TY_DETAIL_CODE = 'PP15' OR TRADE_TY_DETAIL_CODE = 'PP23' OR TRADE_TY_DETAIL_CODE = 'PP25') THEN 'received'
+             WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'F' THEN 'sent'
+             WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'T' THEN 'received'
+             ELSE '' END TRANSACTION_DETAIL,
+        (SELECT SIGN_TXHASH FROM  PLAYCXTRDDB.TCLG_TXHASH_LOG WHERE TXHASH_SN = a.TXHASH_SN) AS TXHASH,
+        BLC_PROCESS_STTUS_CODE, BLC_TRNSMIS_RESULT_CODE
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO a
+        INNER JOIN PLAY_NOMMDB.TNCN_NFTITM_INFO b ON a.NFTITM_SN = b.NFTITM_SN
+        LEFT JOIN PLAY_NOMMDB.TNCN_COLCT_INFO c on b.COLCT_SN = c.COLCT_SN
+        WHERE USER_CMMN_SN =(SELECT USER_CMMN_SN FROM TWAC_USER_INFO WHERE USER_SN= #{userSn}) AND TRADE_TY_DETAIL_CODE IN <foreach item="item" collection="tradeTyDetailCode" open="(" separator="," close=")">#{item}</foreach>
+          <choose>
+          <when test="tradeNm == MINTING">
+              AND RANDBOX_SN = (SELECT RANDBOX_SN FROM PLAY_NOMMDB.TNCN_NFTITM_INFO WHERE NFTITM_SN=#{nftitmSn})
+          </when>
+          <otherwise>
+              AND a.NFTITM_SN=#{nftitmSn}
+          </otherwise>
+          </choose>
+        AND  date_format(TRADE_OCCRRNC_DT, '%Y%m%d') BETWEEN #{startDt} AND #{endDt}
+    </select>
+
+    <select id="selectNftTransactionHistoryDetail" parameterType="map" resultType="com.playnomm.wallet.dto.transaction.response.NftTransactionHistoryResponseDTO" >
+        SELECT a.NFTITM_SN,
+        (SELECT SEASON_NM FROM PLAY_NOMMDB.TNCN_COLCT_SEASON_INFO e WHERE e.COLCT_SEASON_SN = c.COLCT_SEASON_SN) AS SEASON_NM,
+        b.COLCT_SN, c.COLCT_NM, b.NFTITM_NM,
+        (SELECT FILE_URL FROM PLAYCOMACDB.TCCO_FILE_DETAIL d WHERE d.FILE_ID = b.NFTITM_CNTNTS_THUMB_FILE_ID) AS NFTITM_CNTNTS_THUMB_FILE_ID,
+        b.NFTITM_CNTNTS_URL,
+        a.CX_TRADE_SN, a.SYS_ID, a.BLC_NTWRK_ID, a.CX_SYMBOL_CODE, a.TRADE_TY_CODE,a.TRADE_TY_DETAIL_CODE,
+        a.USER_SN, a.TRSMTR_USER_SN, a.TRSMTR_CXWALET_ADRES, a.RCVER_USER_SN, a.RCVER_CXWALET_ADRES,
+        a.CX_TRADE_QTY, a.CX_FEE_QTY, a.TRADE_OCCRRNC_DT,
+        CASE WHEN TRADE_TY_CODE='P'  THEN 'trade'
+             WHEN TRADE_TY_CODE='T'  THEN 'transfer'
+             WHEN TRADE_TY_CODE='M' THEN 'minting'
+             ELSE '' END TRANSACTION_TYPE,
+        CASE WHEN TRADE_TY_CODE='M' AND TRADE_TY_DETAIL_CODE = 'M02' THEN 'sent'
+             WHEN TRADE_TY_CODE='M' AND TRADE_TY_DETAIL_CODE = 'M01' THEN 'received'
+             WHEN TRADE_TY_CODE='P' AND (TRADE_TY_DETAIL_CODE = 'PP12' OR TRADE_TY_DETAIL_CODE = 'PP22') THEN 'received'
+             WHEN TRADE_TY_CODE='P' AND (TRADE_TY_DETAIL_CODE = 'PP13' OR TRADE_TY_DETAIL_CODE = 'PP15' OR TRADE_TY_DETAIL_CODE = 'PP23' OR TRADE_TY_DETAIL_CODE = 'PP25') THEN 'received'
+             WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'F' THEN 'sent'
+             WHEN TRADE_TY_CODE='T' AND RIGHT(TRADE_TY_DETAIL_CODE,1) = 'T' THEN 'received'
+             ELSE '' END TRANSACTION_DETAIL,
+        (SELECT SIGN_TXHASH FROM  PLAYCXTRDDB.TCLG_TXHASH_LOG WHERE TXHASH_SN = a.TXHASH_SN) AS TXHASH,
+        BLC_PROCESS_STTUS_CODE, BLC_TRNSMIS_RESULT_CODE
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO a
+        INNER JOIN PLAY_NOMMDB.TNCN_NFTITM_INFO b ON a.NFTITM_SN = b.NFTITM_SN
+        LEFT JOIN PLAY_NOMMDB.TNCN_COLCT_INFO c on b.COLCT_SN = c.COLCT_SN
+        WHERE a.CX_TRADE_SN =#{cxTradeSn}
+    </select>
+
+</mapper>

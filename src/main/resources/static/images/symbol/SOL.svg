@@ -1,0 +1,11 @@
+<svg id="그룹_37475" data-name="그룹 37475" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
+  <rect id="사각형_27" data-name="사각형 27" width="50" height="50" rx="15" fill="#d3c4ff"/>
+  <g id="그룹_37498" data-name="그룹 37498" transform="translate(-9.544 -14.153)">
+    <circle id="타원_132" data-name="타원 132" cx="17" cy="17" r="17" transform="translate(17.545 22.153)" fill="#6f49e4"/>
+    <g id="그룹_37497" data-name="그룹 37497" transform="translate(22.617 29.806)">
+      <path id="패스_54918" data-name="패스 54918" d="M32.407,69.367a.781.781,0,0,1,.552-.228H52a.39.39,0,0,1,.276.666l-3.76,3.76a.781.781,0,0,1-.552.228H28.923a.39.39,0,0,1-.276-.666Z" transform="translate(-28.532 -55.099)" fill="#fff"/>
+      <path id="패스_54919" data-name="패스 54919" d="M32.407,38.957a.8.8,0,0,1,.552-.228H52a.39.39,0,0,1,.276.666l-3.76,3.76a.781.781,0,0,1-.552.228H28.923a.39.39,0,0,1-.276-.666Z" transform="translate(-28.532 -38.729)" fill="#fff"/>
+      <path id="패스_54920" data-name="패스 54920" d="M48.511,54.065a.782.782,0,0,0-.552-.228H28.923a.39.39,0,0,0-.276.666l3.76,3.76a.782.782,0,0,0,.552.228H52a.39.39,0,0,0,.276-.666Z" transform="translate(-28.532 -46.862)" fill="#fff"/>
+    </g>
+  </g>
+</svg>

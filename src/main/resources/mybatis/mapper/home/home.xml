@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.home.HomeMapper">
+
+    <select id="selectUserInfo" parameterType="integer" resultType="com.playnomm.wallet.dto.home.response.HomeResponseDTO">
+        SELECT a.USER_SN,a.USER_CMMN_SN, a.LOGIN_SAUTH_USE_AT,
+               b.BLC_NTWRK_ID, (SELECT BLC_NTWRK_NM FROM PLAYCOMACDB.TCCO_BLC_NTWK_BASS WHERE BLC_NTWRK_ID= b.BLC_NTWRK_ID) AS BLC_NTWRK_NM,
+               b.CXWALET_ADRES, b.USER_CXWALET_SN, b.CXWALET_NM, c.AVATAR_PROFL_IMAGE_FLPTH AS AVATA_PROFL_URL
+        FROM TWAC_USER_INFO a
+            INNER JOIN TWAC_USER_CXWALET_INFO b ON a.USER_SN = b.USER_SN
+            LEFT JOIN PLAYAVATADB.VZVA_AVATAR_INFO c on a.USER_CMMN_SN = c.USER_CMMN_SN
+        WHERE a.USER_SN =#{userSn}
+            AND CASE WHEN (SELECT COUNT(*) FROM TWAC_USER_CXWALET_INFO WHERE USER_SN = #{userSn} AND BASS_ENTRY_NTWRK_AT ='Y') = 0
+                          THEN b.BLC_NTWRK_ID ='1000' ELSE b.BASS_ENTRY_NTWRK_AT ='Y' END
+    </select>
+    <select id="selectUserTokenList" parameterType="hashMap" resultType="com.playnomm.wallet.dto.token.response.TokenInfoResponseDTO">
+        select CX_SYMBOL_CODE, EXPSR_ORDR  from TWAC_USER_CXWALET_TKN_INFO
+    </select>
+    <update id="modifyBaseNetwork" parameterType="map">
+        update TWAC_USER_CXWALET_INFO set BASS_ENTRY_NTWRK_AT = case when blc_ntwrk_id=#{blcNtwrkId} then 'Y' else 'N' end where USER_SN = #{userSn}
+    </update>
+</mapper>

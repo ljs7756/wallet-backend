@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.FaqMapper">
+
+    <select id="getCategoryList" parameterType="HashMap" resultType="com.playnomm.wallet.dto.setting.response.CategoryResponseDTO">
+        select BBS_NTT_CL_SN, BBS_ID, LANG_CODE, SYS_ID, NTT_CL_NM, EXPSR_ORDR
+        from PLAYCOMACDB.TCCO_BBS_NTT_CL_STDR
+        where BBS_ID = #{bbsId} and SYS_ID=#{sysId} and LANG_CODE=#{lang}
+        order by EXPSR_ORDR
+    </select>
+
+    <select id="getFaqList" parameterType="HashMap" resultType="com.playnomm.wallet.dto.setting.response.BbsResponseDTO">
+        select NTT_SN, BBS_NTT_CL_SN, NTT_SJ, NTCE_BEGIN_DT, SYS_UPDT_DT, NTCE_BEGIN_DT, NTCE_END_DT from PLAYCOMACDB.TCCO_BBS_NTT_DETAIL where BBS_ID = #{bbsId} and SYS_ID=#{sysId} and LANG_CODE=#{lang}
+           <if test="category!='all'">
+               and BBS_NTT_CL_SN=#{category}
+           </if>
+        and NTT_OTHBC_AT="Y" and USE_AT="Y"
+        order by NTCE_BEGIN_DT DESC, SYS_REGIST_DT DESC
+        <if test="category!='all'">
+            LIMIT #{itemPerPage} OFFSET #{offset}
+        </if>
+
+    </select>
+
+    <select id="getDetail" parameterType="int" resultType="com.playnomm.wallet.dto.setting.response.BbsResponseDTO">
+        select NTT_SN, BBS_NTT_CL_SN, NTT_SJ, NTT_CN, NTCE_BEGIN_DT, SYS_UPDT_DT, NTCE_BEGIN_DT, NTCE_END_DT
+        from PLAYCOMACDB.TCCO_BBS_NTT_DETAIL
+        where NTT_SN=#{nttSn}
+    </select>
+
+    <insert id="postCategory" parameterType="com.playnomm.wallet.dto.setting.request.CategoryPostRequestDTO">
+        INSERT INTO PLAYCOMACDB.TCCO_BBS_NTT_CL_STDR (BBS_ID, LANG_CODE, SYS_ID, NTT_CL_NM, EXPSR_ORDR, USE_AT)
+            values (#{bbsId},#{langCode},#{sysId},#{nttClNm},#{expsrOrdr},#{useAt});
+    </insert>
+    <insert id="postFaqDetail" parameterType="com.playnomm.wallet.dto.setting.request.BbsRequestDTO">
+        INSERT INTO PLAYCOMACDB.TCCO_BBS_NTT_DETAIL (BBS_ID, LANG_CODE, SYS_ID, BBS_NTT_CL_SN, NTT_SJ, ACNT_TY_CODE, NTT_USER_ID, NTT_CN, NTT_NOTICE_AT, NTT_OTHBC_AT, NTT_ATCHMNFL_AT, NTT_SORT_ORDR, USE_AT )
+            values (#{bbsId},#{langCode},#{sysId},#{bbsNttClSn},#{nttSj},#{acntTyCode},#{nttUserId}, #{nttCn},#{nttNoticeAt},#{nttOthbcAt}, #{nttAtchmnflAt}, #{nttSortOrdr}, #{useAt});
+    </insert>
+
+    <insert id="postUserQuestion" parameterType="com.playnomm.wallet.dto.setting.request.BbsRequestDTO">
+        INSERT INTO PLAYCOMACDB.TCCO_BBS_NTT_DETAIL (
+            BBS_ID, LANG_CODE, SYS_ID, BBS_NTT_CL_SN, NTT_SJ, ACNT_TY_CODE, NTT_USER_ID,
+            NTT_CN, NTT_NOTICE_AT, NTT_OTHBC_AT, NTT_ATCHMNFL_AT, NTT_SORT_ORDR, USE_AT, NTT_USER_EMAIL
+            )
+        values (
+                    #{bbsId},#{langCode},#{sysId},#{bbsNttClSn},#{nttSj},#{acntTyCode},#{nttUserId},
+                    #{nttCn},#{nttNoticeAt},#{nttOthbcAt}, #{nttAtchmnflAt}, #{nttSortOrdr}, #{useAt}, #{nttUserEmail}
+                );
+    </insert>
+
+
+
+
+</mapper>

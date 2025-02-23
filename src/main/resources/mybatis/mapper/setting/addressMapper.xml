@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.AddressMapper">
+    <select id="getMainNetList" resultType="MainNetResponseDTO">
+        SELECT net.BLC_NTWRK_ID, net.BLC_NTWRK_NM, net.BLC_NTWRK_DC,
+               tk.CX_SYMBOL_CODE, BLC_CHAIN_ID
+        FROM PLAYCOMACDB.TCCO_BLC_NTWK_BASS net
+                 left join PLAYCOMACDB.TCCO_BLC_TKN_BASS tk on tk.BLC_NTWRK_ID = net.BLC_NTWRK_ID
+        where net.DELETE_AT ='N' AND tk.BLC_NTWRK_BASS_TKN_AT='Y';
+    </select>
+    <select id="getAddressList" parameterType="HashMap" resultType="com.playnomm.wallet.dto.setting.response.AddressResponseDTO" >
+        SELECT USER_CXWALET_ADBK_SN, USER_CXWALET_SN, USER_SN,
+               ADBK_CXWALET_ADRES, BLC_NTWRK_ID, CX_SYMBOL_CODE,
+               ADBK_NM, EXPSR_ORDR, USE_PURPS_CODE, SELF_ADBK_AT
+        FROM TWAC_USER_CXWALET_ADBK_INFO
+        WHERE DELETE_AT = 'N' and USER_SN = #{userSn}
+            <if test="cxSymbolCode!=null">
+                AND CX_SYMBOL_CODE=#{cxSymbolCode}
+            </if>
+            <if test="selfAdbkAt!=null">
+                AND SELF_ADBK_AT=#{selfAdbkAt}
+            </if>
+        ORDER BY SYS_REGIST_DT DESC
+    </select>
+
+    <select id="postAfterSearch" parameterType="com.playnomm.wallet.dto.setting.request.AddressRequestDTO" resultType="com.playnomm.wallet.dto.setting.response.AddressResponseDTO">
+        SELECT USER_CXWALET_ADBK_SN, USER_CXWALET_SN, USER_SN,
+               ADBK_CXWALET_ADRES, BLC_NTWRK_ID, CX_SYMBOL_CODE,
+               ADBK_NM, EXPSR_ORDR, USE_PURPS_CODE, SELF_ADBK_AT
+        FROM TWAC_USER_CXWALET_ADBK_INFO
+        WHERE
+            USER_SN = #{userSn}
+          and ADBK_CXWALET_ADRES=#{adbkCxwaletAdres}
+          and BLC_NTWRK_ID=#{blcNtwrkId}
+          and ADBK_NM=#{adbkNm}
+          and USE_PURPS_CODE=#{usePurpsCode}
+          and DELETE_AT = 'N'
+        ORDER BY  SYS_REGIST_DT DESC
+            LIMIT 1;
+
+    </select>
+    <select id="findOneBySn" parameterType="com.playnomm.wallet.dto.setting.request.AddressRequestDTO" resultType="com.playnomm.wallet.dto.setting.response.AddressResponseDTO" >
+        SELECT USER_CXWALET_ADBK_SN, USER_CXWALET_SN, USER_SN,
+               ADBK_CXWALET_ADRES, BLC_NTWRK_ID, CX_SYMBOL_CODE,
+               ADBK_NM, EXPSR_ORDR, USE_PURPS_CODE, SELF_ADBK_AT
+        FROM TWAC_USER_CXWALET_ADBK_INFO
+        WHERE USER_CXWALET_ADBK_SN = #{userCxwaletAdbkSn} and DELETE_AT = 'N'
+    </select>
+
+    <insert id="postAddress" parameterType="com.playnomm.wallet.dto.setting.request.AddressRequestDTO" >
+        INSERT INTO TWAC_USER_CXWALET_ADBK_INFO (USER_CXWALET_ADBK_SN, USER_SN, SELF_ADBK_AT, ADBK_CXWALET_ADRES, BLC_NTWRK_ID, CX_SYMBOL_CODE, ADBK_NM, USE_PURPS_CODE)
+        VALUES (#{userCxwaletAdbkSn}, #{userSn},#{selfAdbkAt}, #{adbkCxwaletAdres},#{blcNtwrkId},#{cxSymbolCode},#{adbkNm}, #{usePurpsCode} )
+    </insert>
+    <update id="updateAddressInfo" parameterType="com.playnomm.wallet.dto.setting.request.AddressRequestDTO">
+        UPDATE TWAC_USER_CXWALET_ADBK_INFO SET ADBK_NM=#{adbkNm}, USE_PURPS_CODE = #{usePurpsCode}
+        WHERE USER_SN = #{userSn} AND ADBK_CXWALET_ADRES =#{adbkCxwaletAdres}
+          AND BLC_NTWRK_ID =#{blcNtwrkId} AND DELETE_AT ='N'
+    </update>
+    <select id="checkAddress" parameterType="com.playnomm.wallet.dto.setting.request.AddressRequestDTO" resultType="int">
+        SELECT COUNT(*) FROM TWAC_USER_CXWALET_ADBK_INFO
+        WHERE USER_SN = #{userSn} AND BLC_NTWRK_ID =#{blcNtwrkId}
+          AND ADBK_CXWALET_ADRES =#{adbkCxwaletAdres}
+          AND DELETE_AT ='N'
+    </select>
+
+    <update id="deleteBySn" parameterType="int" >
+        UPDATE TWAC_USER_CXWALET_ADBK_INFO
+            SET DELETE_AT = 'Y'
+            WHERE USER_CXWALET_ADBK_SN = #{userCxwaletAdbkSn}
+    </update>
+    <update id="patchBySn" parameterType="com.playnomm.wallet.dto.setting.request.AddressPatchRequestDTO" >
+        UPDATE TWAC_USER_CXWALET_ADBK_INFO
+            <set>
+                <if test="adbkCxwaletAdres != null">
+                    ADBK_CXWALET_ADRES = #{adbkCxwaletAdres},
+                </if>
+                <if test="blcNtwrkId != null">
+                    BLC_NTWRK_ID = #{blcNtwrkId},
+                </if>
+                <if test="cxSymbolCode != null">
+                    CX_SYMBOL_CODE = #{cxSymbolCode},
+                </if>
+                <if test="adbkNm != null">
+                    ADBK_NM = #{adbkNm},
+                </if>
+                <if test="usePurpsCode != null">
+                    USE_PURPS_CODE = #{usePurpsCode},
+                </if>
+            </set>
+            WHERE USER_CXWALET_ADBK_SN = #{userCxwaletAdbkSn}
+    </update>
+    <select id="getRecentAddressForToken" parameterType="map" resultType="com.playnomm.wallet.dto.setting.response.RecentAddressResponseDTO" >
+        SELECT USER_CMMN_SN, USER_SN, SYS_ID, BLC_NTWRK_ID, CX_SYMBOL_CODE, TRADE_TY_DETAIL_CODE,
+               TRSMTR_CXWALET_ADRES, RCVER_CXWALET_ADRES,TRADE_OCCRRNC_DT,
+               (select ADBK_NM  from TWAC_USER_CXWALET_ADBK_INFO b where b.USER_SN= #{userSn} AND b.ADBK_CXWALET_ADRES = a.RCVER_CXWALET_ADRES AND b.DELETE_AT ='N' AND b.BLC_NTWRK_ID =#{blcNtwrkId}) as ADBK_NM
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO a
+        WHERE
+                USER_CMMN_SN =(SELECT USER_CMMN_SN FROM TWAC_USER_INFO WHERE USER_SN= #{userSn})
+          AND SYS_ID ='CXWL'
+          AND BLC_NTWRK_ID =#{blcNtwrkId}
+          AND CX_SYMBOL_CODE=#{cxSymbolCode}
+          AND CASE WHEN BLC_NTWRK_ID = '1000' THEN  TRADE_TY_DETAIL_CODE ='TLLF'
+                   WHEN BLC_NTWRK_ID = '1001' THEN  TRADE_TY_DETAIL_CODE ='TEEF'
+                   WHEN BLC_NTWRK_ID = '1002' THEN  TRADE_TY_DETAIL_CODE ='TBBF' ELSE 1=1 END
+          AND DATE_ADD(TRADE_OCCRRNC_DT, INTERVAL -6 MONTH)
+    </select>
+    <select id="getRecentAddressForNft" parameterType="integer" resultType="com.playnomm.wallet.dto.setting.response.RecentAddressResponseDTO" >
+        SELECT USER_CMMN_SN, USER_SN, SYS_ID, BLC_NTWRK_ID, CX_SYMBOL_CODE, TRADE_TY_DETAIL_CODE,
+               TRSMTR_CXWALET_ADRES, RCVER_CXWALET_ADRES, TRADE_OCCRRNC_DT,
+               (select ADBK_NM  from TWAC_USER_CXWALET_ADBK_INFO b where b.ADBK_CXWALET_ADRES = a.RCVER_CXWALET_ADRES ) as ADBK_NM
+        FROM PLAYCXTRDDB.TCCX_TRADE_INFO a
+        WHERE
+            USER_CMMN_SN =(SELECT USER_CMMN_SN FROM TWAC_USER_INFO WHERE USER_SN= #{userSn})
+          AND SYS_ID ='CXWL'
+          AND TRADE_TY_DETAIL_CODE ='NLLF'
+          AND DATE_ADD(TRADE_OCCRRNC_DT, INTERVAL -6 MONTH)
+    </select>
+
+</mapper>

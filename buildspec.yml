@@ -1,0 +1,32 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+  pre_build:
+    on-failure: CONTINUE
+    commands:
+      - echo "pre Build Begin!"
+      - cd ./deployScript && cat -v app_deploy.sh
+      - sed -i -e "s/\r$//" app_deploy.sh
+      - cd ../ && pwd
+      - echo "pre Build End!"
+  build:
+    on-failure: CONTINUE
+    commands:
+      - echo "Maven Admin Projet Build Start!"
+      - mvn clean package -Dmaven.test.skip=true -P dev
+  post_build:
+    on-failure: CONTINUE
+    commands:
+      - echo "post Build Stage!"
+artifacts:
+  discard-paths: yes
+  files:
+    - './appspec.yml'
+    - '*/app_deploy.sh'
+    - '*/wallet-*-SNAPSHOT.jar'
+  #base-directory: 'target/'
+cache:
+  paths:
+    - '/root/.m2/**/*'

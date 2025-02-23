@@ -1,0 +1,30 @@
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /app/playnomm_wallet/deploy
+file_exists_behavior: OVERWRITE
+
+permissions:
+  - object: /app/playnomm_wallet/deploy
+    pattern: "**"
+    except: [app_deploy.sh]
+    owner: ubuntu
+    group: ubuntu
+    mode: 664
+  - object: /app/playnomm_wallet/deploy
+    pattern: "*.sh"
+    owner: ubuntu
+    group: ubuntu
+    mode: 740
+
+hooks:
+  ApplicationStop:
+    - location: ./app_deploy.sh
+      timeout: 300
+      runas: ubuntu
+  ApplicationStart:
+    - location: ./app_deploy.sh
+      timeout: 300
+      runas: ubuntu

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.TermsMapper">
+    <select id="getTermsList" parameterType="HashMap" resultType="com.playnomm.wallet.dto.setting.response.TermsResponseDTO" >
+        SELECT stp.STPLAT_ID, stp.STPLAT_NM, stp.STPLAT_ESSNTL_AT
+        FROM PLAYCOMACDB.TCCO_STPLAT_BASS stp
+        JOIN PLAYCOMACDB.TCCO_STD_CODE_INFO c
+          ON c.STD_CODE_GROUP_ID = 'STPLAT_TY_CODE'
+              AND c.LANG_CODE = stp.LANG_CODE
+              AND c.STD_CODE = stp.STPLAT_TY_CODE
+              AND c.SYS_ID = stp.SYS_ID
+              AND c.USE_AT = 'Y'
+        WHERE stp.SYS_ID = #{sysId} -- 서비스 코드
+          AND stp.USER_SBSCRB_STPLAT_AT = 'Y' -- 회원가입시 체크할 약관인지 여부
+          AND stp.LANG_CODE = #{langCode} -- 언어
+          AND stp.STPLAT_DETAIL_CN is not null
+          AND stp.USE_AT = 'Y' AND stp.DELETE_AT = 'N' AND stp.LAST_AT = 'Y';
+    </select>
+
+    <select id="getTermsDetail" parameterType="HashMap" resultType="com.playnomm.wallet.dto.setting.response.TermsResponseDTO" >
+        SELECT STPLAT_ID, STPLAT_NM, STPLAT_CN, STPLAT_DETAIL_CN, STPLAT_VER_ID, STPLAT_ESSNTL_AT
+        FROM PLAYCOMACDB.TCCO_STPLAT_BASS
+        WHERE USE_AT="Y" and LAST_AT="Y"
+          and STPLAT_ID=#{stplatId} and LANG_CODE=#{langCode}
+    </select>
+</mapper>

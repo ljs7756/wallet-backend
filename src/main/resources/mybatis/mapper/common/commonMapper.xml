@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.common.CommonMapper">
+    <select id="selectBlcNtwkBass" parameterType="String" resultType="HashMap">
+        SELECT
+        *
+        FROM PLAYCOMACDB.TCCO_BLC_NTWK_BASS
+        WHERE BLC_NTWRK_ID = #{networkId}
+    </select>
+
+    <select id="selectBlcNtwkBassList" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_BLC_NTWK_BASS
+    </select>
+
+    <select id="selectStdCodeInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_STD_CODE_INFO
+        WHERE STD_CODE_GROUP_ID = #{STD_CODE_GROUP_ID} AND STD_CODE = #{STD_CODE} AND LANG_CODE = #{LANG_CODE}
+    </select>
+
+    <select id="selectUserInfo" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            TUI.*
+            , TUCI.*
+        FROM TWAC_USER_INFO TUI
+        JOIN TWAC_USER_CXWALET_INFO TUCI
+        ON TUI.USER_SN = TUCI.USER_SN
+        WHERE TUCI.CXWALET_ADRES = #{CXWALET_ADRES}
+        AND TUCI.BLC_NTWRK_ID = #{BLC_NTWRK_ID}
+        AND TUI.USER_STTUS_CODE != 'T'
+    </select>
+
+    <select id="selectManagerInfo" parameterType="String" resultType="HashMap">
+        SELECT
+            BLC_MNGR_PRIVKY
+        FROM PLAYCOMACDB.TCCO_BLC_MNGR_BASS
+        WHERE BLC_MNGR_ID = #{BLC_MNGR_ID}
+    </select>
+
+    <select id="selectSymbolList" resultType="String">
+        SELECT
+            CX_SYMBOL_CODE
+        FROM PLAYWALETDB.TWAC_USER_CXWALET_TKN_INFO
+        WHERE DELETE_AT = 'N'
+        GROUP BY CX_SYMBOL_CODE
+    </select>
+
+    <insert id="insertExrBass" parameterType="HashMap">
+        INSERT INTO PLAYCOMACDB.TCCO_EXR_BASS
+            (CX_EXCHN_CODE, CX_SYMBOL_CODE, EXR_STDR_DT, CX_EXR_USD_CRRNCY_AMT, CX_EXR_KRW_CRRNCY_AMT, LM_USD_EXR_AMT, LM_KRW_EXR_AMT, CX_EXR_KRW_PERCENT_CHANGE_1H, CX_EXR_USD_PERCENT_CHANGE_1H, SYS_REGISTER_SN)
+        VALUES
+            (#{CX_EXCHN_CODE}, #{CX_SYMBOL_CODE}, #{EXR_STDR_DT}, #{CX_EXR_USD_CRRNCY_AMT}, #{CX_EXR_KRW_CRRNCY_AMT}, #{LM_USD_EXR_AMT}, #{LM_KRW_EXR_AMT}, #{CX_EXR_KRW_PERCENT_CHANGE_1H}, #{CX_EXR_USD_PERCENT_CHANGE_1H}, 1)
+    </insert>
+
+    <update id="updateExrBass" parameterType="HashMap">
+        UPDATE PLAYCOMACDB.TCCO_EXR_BASS
+            SET SYS_UPDUSR_SN = 1
+            , LAST_AT = 'N'
+        WHERE CX_EXCHN_CODE = #{CX_EXCHN_CODE}
+        AND CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+        AND LAST_AT = 'Y'
+    </update>
+
+    <insert id="insertCoinmkcapSts" parameterType="HashMap">
+        INSERT INTO PLAYCOMACDB.TCCO_COINMKCAP_STS
+            (STDR_DT, CX_SYMBOL_CODE, CRRNCY_SYMBOL_CODE, CYCLE_CODE, RSPNS_RESULT, ID, NAME, SYMBOL, SLUG, CMC_RANK, CIRCULATING_SUPPLY, TOTAL_SUPPLY, MAX_SUPPLY, DATE_ADDED, LAST_UPDATED, PRICE, VOLUM_24H, VOLUME_CHANGE_24H, PERCENT_CHANGE_1H, PERCENT_CHANGE_24H, PERCENT_CHANGE_7D, PERCENT_CHANGE_30D, PERCENT_CHANGE_60D, PERCENT_CHANGE_90D, MARKET_CAP, MARKET_CAP_DOMINANCE, FULLY_DILUTED_MARKET_CAP, LAST_AT, SYS_REGISTER_SN)
+        VALUES
+            (#{EXR_STDR_DT}, #{CX_SYMBOL_CODE}, #{CRRNCY_SYMBOL_CODE}, #{CYCLE_CODE}, #{RSPNS_RESULT}, #{ID}, #{NAME}, #{SYMBOL}, #{SLUG}, #{CMC_RANK}, #{CIRCULATING_SUPPLY}, #{TOTAL_SUPPLY}, #{MAX_SUPPLY}, #{DATE_ADDED}, #{LAST_UPDATED}, #{PRICE}, #{VOLUM_24H}, #{VOLUME_CHANGE_24H}, #{PERCENT_CHANGE_1H}, #{PERCENT_CHANGE_24H}, #{PERCENT_CHANGE_7D}, #{PERCENT_CHANGE_30D}, #{PERCENT_CHANGE_60D}, #{PERCENT_CHANGE_90D}, #{MARKET_CAP}, #{MARKET_CAP_DOMINANCE}, #{FULLY_DILUTED_MARKET_CAP}, 'Y', 1)
+    </insert>
+
+    <update id="updateCoinmkcapSts" parameterType="HashMap">
+        UPDATE PLAYCOMACDB.TCCO_COINMKCAP_STS
+            SET SYS_UPDUSR_SN = 1
+            , LAST_AT = 'N'
+        WHERE CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+        AND LAST_AT = 'Y'
+    </update>
+
+    <select id="selectExrBass" parameterType="String" resultType="HashMap">
+        SELECT
+            *
+        FROM PLAYCOMACDB.TCCO_EXR_BASS
+        WHERE CX_SYMBOL_CODE = #{CX_SYMBOL_CODE}
+        AND LAST_AT = 'Y'
+    </select>
+
+    <select id="selectGtwyBass" parameterType="String" resultType="String">
+        SELECT
+            GTWY_ADRES
+        FROM PLAYCOMACDB.TCCO_GTWY_BASS WHERE GTWY_SE_CODE = #{GTWY_SE_CODE} AND DELETE_AT = 'N'
+    </select>
+</mapper>

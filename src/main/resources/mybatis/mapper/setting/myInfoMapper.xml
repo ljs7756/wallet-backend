@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.MyInfoMapper">
+
+    <select id="getMyWallet" parameterType="int" resultType="com.playnomm.wallet.dto.setting.response.WalletInfoResponseDTO" >
+        select USER_CXWALET_ADBK_SN, SELF_ADBK_AT, ADBK_CXWALET_ADRES,
+               BLC_NTWRK_ID, CX_SYMBOL_CODE, ADBK_NM, REPRSNT_ADBK_AT
+        FROM TWAC_USER_CXWALET_ADBK_INFO
+        WHERE USER_SN = #{userSn} AND DELETE_AT="N"
+    </select>
+
+</mapper>

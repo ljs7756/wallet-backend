@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper2.user.UserMapper">
+    <select id="getPrivateKey2" parameterType="map" resultType="string">
+        SELECT USER_PART_PRIVKY  FROM TPAC_USER_CXWALET_PRIVKY_INFO WHERE USER_SN =#{userSn} AND CXWALET_ADRES =#{smrtCntrctAdres} AND BLC_NTWRK_ID =#{blcNtwrkId}
+    </select>
+    <select id="getMngrPrivateKey2" parameterType="map" resultType="string">
+        SELECT BLC_MNGR_PART_PRIVKY FROM TPCO_BLC_MNGR_PRIVKY_BASS tbmpb WHERE BLC_MNGR_BASS_SN =#{blcMngrBassSn}
+    </select>
+    <insert id="insertUserDividePrivateKey" parameterType="map"  >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+                <if test="item.blcNtwrkId != 1000">
+                    INSERT INTO TPAC_USER_CXWALET_PRIVKY_INFO(USER_SN, BLC_NTWRK_ID, CXWALET_ADRES, USER_PART_PRIVKY)
+                    VALUES(#{item.userSn},#{item.blcNtwrkId},#{item.cxwaletAdres}, #{item.userPrivky2})
+                </if>
+        </foreach>
+    </insert>
+    <insert id="insertPrivateKey" parameterType="map"  >
+                INSERT INTO TPAC_USER_CXWALET_PRIVKY_INFO(USER_SN, BLC_NTWRK_ID, CXWALET_ADRES, USER_PART_PRIVKY)
+                VALUES(#{userSn}, #{blcNtwrkId}, #{cxwaletAdres}, #{userPrivky2})
+    </insert>
+
+</mapper>

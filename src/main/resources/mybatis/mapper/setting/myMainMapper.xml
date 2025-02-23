@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.setting.MyMainMapper">
+
+    <select id="getBriefMyInfo" parameterType="int" resultType="com.playnomm.wallet.dto.setting.response.BriefMyInfoDTO">
+        select
+            u.USER_SN,
+            uad.USER_CMMN_AVATA_SN, uad.USER_AVATA_USE_AT
+        from TWAC_USER_INFO u
+            left join TWAC_USER_ADI_DETAIL uad
+                on u.USER_SN = uad.USER_SN
+        where u.USER_SN = #{userSn}
+    </select>
+    <select id="getMyWallet" parameterType="int" resultType="com.playnomm.wallet.dto.setting.response.WalletInfoResponseDTO" >
+        SELECT USER_CXWALET_SN, BLC_NTWRK_ID, BASS_ENTRY_NTWRK_AT, CXWALET_ADRES, CXWALET_NM,
+        CXWALET_STTUS_CODE
+        FROM TWAC_USER_CXWALET_INFO
+        WHERE USER_SN=#{userSn} and USE_AT='Y' and LAST_AT='Y' and DELETE_AT='N'
+    </select>
+    <select id="getWallet" parameterType="HashMap" resultType="com.playnomm.wallet.dto.setting.response.WalletInfoResponseDTO" >
+        SELECT USER_CXWALET_SN, BLC_NTWRK_ID, BASS_ENTRY_NTWRK_AT, CXWALET_ADRES, CXWALET_NM,
+        CXWALET_STTUS_CODE
+        FROM TWAC_USER_CXWALET_INFO
+        WHERE USER_SN=#{userSn} and USE_AT='Y' and LAST_AT='Y' and DELETE_AT='N'
+        <if test="bassEntryNtwrkAt!=null" > AND BASS_ENTRY_NTWRK_AT=#{bassEntryNtwrkAt} </if>
+        <if test="userCxwaletSn!=null" > AND USER_CXWALET_SN=#{userCxwaletSn} </if>
+
+    </select>
+    <update id="patchWallet" parameterType="com.playnomm.wallet.dto.setting.request.WalletPatchRequestDTO" >
+        UPDATE TWAC_USER_CXWALET_INFO
+            <set>
+                <if test="cxwaletNm!=null"> CXWALET_NM=#{cxwaletNm},</if>
+                <if test="cxwaletAdres!=null"> CXWALET_ADRES=#{cxwaletAdres},</if>
+                <if test="blcNtwrkId!=null"> BLC_NTWRK_ID=#{blcNtwrkId},</if>
+            </set>
+        where USER_CXWALET_SN = #{userCxwaletSn}
+    </update>
+</mapper>

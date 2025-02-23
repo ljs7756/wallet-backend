@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playnomm.wallet.mapper.nft.NftMapper">
+    <select id="selectUserNft" parameterType="integer" resultType="com.playnomm.wallet.dto.nft.response.NftInfoResponseDTO" >
+        SELECT a.NFTITM_SN, a.COLCT_SN,
+               (SELECT SEASON_NM FROM PLAY_NOMMDB.TNCN_COLCT_SEASON_INFO c WHERE c.COLCT_SEASON_SN = b.COLCT_SEASON_SN) AS SEASON_NM,
+               b.COLCT_NM, a.NFTITM_NM, b.COLCT_DC, b.COLCT_DC_KO, b.CRTR_NM,
+               (SELECT FILE_URL FROM PLAYCOMACDB.TCCO_FILE_DETAIL d WHERE d.FILE_ID = b.COLCT_THUMB_FILE_ID) AS COLCT_THUMB_FILE_URL,
+               NFTITM_CNTNTS_URL, a.RANDBOX_SN, e.USER_NFT_RANDBOX_SN,
+               CASE WHEN e.EXPSR_ORDR IS NULL THEN 99 ELSE  e.EXPSR_ORDR END EXPSR_ORDR
+        FROM PLAY_NOMMDB.TNCN_NFTITM_INFO a
+                 INNER JOIN PLAY_NOMMDB.TNCN_COLCT_INFO b on a.COLCT_SN = b.COLCT_SN
+                 LEFT JOIN TWAC_USER_NFT_RANDBOX_DETAIL e on a.NFTITM_SN = e.NFTITM_SN
+        WHERE a.DELETE_AT='N' AND a.OWNER_USER_SN = #{userSn}
+        ORDER BY EXPSR_ORDR ASC
+    </select>
+    <update id="saveNftOrder" parameterType="com.playnomm.wallet.dto.nft.request.SaveNftOrderRequestDTO" >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            <choose>
+                <when test="item.userNftRandboxSn != null ">
+                    UPDATE TWAC_USER_NFT_RANDBOX_DETAIL SET EXPSR_ORDR=#{item.expsrOrdr} WHERE USER_NFT_RANDBOX_SN =#{item.userNftRandboxSn}
+                </when>
+                <otherwise>
+                    INSERT INTO TWAC_USER_NFT_RANDBOX_DETAIL(USER_SN, NFTITM_SN, RANDBOX_SN, EXPSR_ORDR)
+                    VALUES(#{item.userSn}, #{item.nftitmSn}, #{item.randboxSn}, #{item.expsrOrdr})
+                </otherwise>
+            </choose>
+        </foreach>
+    </update>
+</mapper>
